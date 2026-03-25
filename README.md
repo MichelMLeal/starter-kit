@@ -1,58 +1,107 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Starter Kit Laravel
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A production-ready Laravel starter kit with **DDD architecture**, **Sanctum authentication**, **React frontend**, and a full **Docker development stack**.
 
-## About Laravel
+## Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+| Layer | Technology |
+|-------|-----------|
+| **Backend** | Laravel 12, PHP 8.3+ |
+| **Frontend** | React 19, React Router, TailwindCSS v4, Vite |
+| **Auth** | Laravel Sanctum (API tokens + refresh tokens) |
+| **Database** | PostgreSQL 18 |
+| **Cache/Queue** | Redis |
+| **Email** | Mailpit (development) |
+| **Docker** | Laravel Sail |
+| **Tests** | Pest PHP |
+| **Lint** | Laravel Pint (PSR-12 + Laravel preset) |
+| **CI/CD** | GitHub Actions (lint + test + build) |
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Quick Start
 
 ```bash
-composer require laravel/boost --dev
+# Clone
+git clone git@github.com:MichelMLeal/starter-kit.git
+cd starter-kit
 
-php artisan boost:install
+# Setup
+cp .env.example .env
+composer install
+npm install
+
+# Start Docker services
+./vendor/bin/sail up -d
+
+# Run migrations
+./vendor/bin/sail artisan migrate
+
+# Dev server (app + queue + logs + vite)
+composer dev
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Architecture (DDD)
 
-## Contributing
+```
+app/
+├── Domain/                    # Business logic (pure)
+│   ├── Auth/
+│   │   ├── Models/            # User, RefreshToken
+│   │   ├── DTOs/              # LoginDTO, RegisterDTO
+│   │   ├── Actions/           # Login, Register, RefreshToken, Logout
+│   │   ├── Repositories/      # Interfaces
+│   │   └── Exceptions/        # Domain exceptions
+│   └── Shared/                # Base contracts, DTOs, exceptions
+│
+├── Infrastructure/            # Eloquent implementations
+│   ├── Auth/Repositories/     # EloquentUserRepository, etc.
+│   └── Auth/Providers/        # AuthDomainServiceProvider
+│
+└── Application/               # HTTP layer
+    └── Auth/                  # Controllers, Requests, Resources
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Adding a New Domain
 
-## Code of Conduct
+1. Create `app/Domain/YourDomain/` (Models, DTOs, Actions, Repositories, Exceptions)
+2. Implement in `app/Infrastructure/YourDomain/`
+3. Register provider in `bootstrap/providers.php`
+4. Add HTTP layer in `app/Application/YourDomain/`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## API Endpoints
 
-## Security Vulnerabilities
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/auth/register` | No | Register user |
+| `POST` | `/api/auth/login` | No | Login, get tokens |
+| `POST` | `/api/auth/refresh` | No | Refresh access token |
+| `POST` | `/api/auth/logout` | Yes | Logout, revoke tokens |
+| `GET`  | `/api/auth/me` | Yes | Get current user |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Auth Flow
+
+1. Login → `access_token` + `refresh_token`
+2. Use `Authorization: Bearer {access_token}` for authenticated requests
+3. On 401 → POST `refresh_token` to `/api/auth/refresh` → new token pair
+4. Refresh tokens stored hashed (sha256), expire in 7 days
+
+## Testing
+
+```bash
+./vendor/bin/pest               # Run all (19 tests)
+./vendor/bin/pest --filter=Auth # Auth tests only
+```
+
+## Lint
+
+```bash
+./vendor/bin/pint --test  # Check
+./vendor/bin/pint         # Auto-fix
+```
+
+## CI/CD
+
+GitHub Actions on push/PR to `main`: **Lint** → **Test** → **Build**
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+MIT

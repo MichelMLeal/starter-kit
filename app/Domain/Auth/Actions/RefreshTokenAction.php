@@ -7,6 +7,7 @@ namespace App\Domain\Auth\Actions;
 use App\Domain\Auth\Exceptions\TokenExpiredException;
 use App\Domain\Auth\Models\User;
 use App\Domain\Auth\Repositories\RefreshTokenRepositoryInterface;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 final class RefreshTokenAction
@@ -29,21 +30,22 @@ final class RefreshTokenAction
         /** @var User $user */
         $user = $storedToken->user;
 
-        $this->refreshTokenRepository->revokeAllForUser($user->id);
+        return DB::transaction(function () use ($user) {
+            $this->refreshTokenRepository->revokeAllForUser($user->id);
 
-        $accessToken = $user->createToken('auth-token')->plainTextToken;
+            $accessToken = $user->createToken('auth-token')->plainTextToken;
+            $plainRefreshToken = Str::random(64);
 
-        $plainRefreshToken = Str::random(64);
+            $this->refreshTokenRepository->createForUser(
+                userId: $user->id,
+                token: hash('sha256', $plainRefreshToken),
+                expiresAt: now()->addDays(7),
+            );
 
-        $this->refreshTokenRepository->createForUser(
-            userId: $user->id,
-            token: hash('sha256', $plainRefreshToken),
-            expiresAt: now()->addDays(7),
-        );
-
-        return [
-            'access_token' => $accessToken,
-            'refresh_token' => $plainRefreshToken,
-        ];
+            return [
+                'access_token' => $accessToken,
+                'refresh_token' => $plainRefreshToken,
+            ];
+        });
     }
 }

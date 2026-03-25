@@ -27,7 +27,10 @@ final class LoginAction
         /** @var User|null $user */
         $user = $this->userRepository->findByEmail($dto->email);
 
-        if (! $user || ! Hash::check($dto->password, $user->password)) {
+        // Always perform hash check to prevent timing-based user enumeration
+        $validPassword = $user && Hash::check($dto->password, $user->password);
+
+        if (! $validPassword) {
             throw new InvalidCredentialsException;
         }
 

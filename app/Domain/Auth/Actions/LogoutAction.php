@@ -15,7 +15,9 @@ final class LogoutAction
 
     public function execute(User $user): void
     {
-        $user->currentAccessToken()->delete();
+        if ($token = $user->currentAccessToken()) {
+            $token->delete();
+        }
 
         $this->refreshTokenRepository->revokeAllForUser($user->id);
     }
