@@ -39,7 +39,7 @@ abstract class EloquentBaseRepository implements RepositoryInterface
         $record = $this->findOrFail($id);
         $record->update($data);
 
-        return $record->refresh();
+        return $record;
     }
 
     public function delete(int|string $id): bool

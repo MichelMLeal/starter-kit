@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-export default function GuestLayout() {
+export default memo(function GuestLayout() {
     const { user, loading } = useAuth();
 
     if (loading) {
@@ -22,4 +22,4 @@ export default function GuestLayout() {
             <Outlet />
         </div>
     );
-}
+})

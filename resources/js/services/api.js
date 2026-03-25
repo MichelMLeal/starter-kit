@@ -8,13 +8,43 @@ const api = axios.create({
     },
 });
 
+// In-memory token cache to avoid synchronous localStorage reads on every request
+let cachedAccessToken = localStorage.getItem('access_token');
+let cachedRefreshToken = localStorage.getItem('refresh_token');
+
+export function setTokens(accessToken, refreshToken) {
+    cachedAccessToken = accessToken;
+    cachedRefreshToken = refreshToken;
+    localStorage.setItem('access_token', accessToken);
+    localStorage.setItem('refresh_token', refreshToken);
+}
+
+export function clearTokens() {
+    cachedAccessToken = null;
+    cachedRefreshToken = null;
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+}
+
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+    if (cachedAccessToken) {
+        config.headers.Authorization = `Bearer ${cachedAccessToken}`;
     }
     return config;
 });
+
+// Shared state for token refresh queue
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+function onRefreshed(accessToken) {
+    refreshSubscribers.forEach((callback) => callback(accessToken));
+    refreshSubscribers = [];
+}
+
+function addRefreshSubscriber(callback) {
+    refreshSubscribers.push(callback);
+}
 
 api.interceptors.response.use(
     (response) => response,
@@ -23,29 +53,48 @@ api.interceptors.response.use(
 
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
-            const refreshToken = localStorage.getItem('refresh_token');
 
-            if (refreshToken) {
-                try {
-                    const { data } = await axios.post('/api/auth/refresh', {
-                        refresh_token: refreshToken,
+            if (!cachedRefreshToken) {
+                return Promise.reject(error);
+            }
+
+            // If already refreshing, queue this request
+            if (isRefreshing) {
+                return new Promise((resolve) => {
+                    addRefreshSubscriber((accessToken) => {
+                        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+                        resolve(api(originalRequest));
                     });
+                });
+            }
 
-                    localStorage.setItem('access_token', data.data.access_token);
-                    localStorage.setItem('refresh_token', data.data.refresh_token);
+            isRefreshing = true;
 
-                    originalRequest.headers.Authorization = `Bearer ${data.data.access_token}`;
-                    return api(originalRequest);
-                } catch {
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    window.location.href = '/login';
-                }
+            try {
+                const { data } = await api.post('/auth/refresh', {
+                    refresh_token: cachedRefreshToken,
+                });
+
+                const newAccessToken = data.data.access_token;
+                setTokens(newAccessToken, data.data.refresh_token);
+
+                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                onRefreshed(newAccessToken);
+
+                return api(originalRequest);
+            } catch {
+                refreshSubscribers = [];
+                clearTokens();
+                window.location.href = '/login';
+
+                return Promise.reject(error);
+            } finally {
+                isRefreshing = false;
             }
         }
 
         return Promise.reject(error);
-    }
+    },
 );
 
 export default api;
