@@ -84,3 +84,32 @@ All API routes live in `routes/api.php` under `/api/auth/`. Public routes have `
 ### Docker (compose.yaml)
 
 PostgreSQL 18, Redis, Mailpit. PHP app exposed on port 80, Vite on 5173.
+
+## Installed Packages
+
+### Telescope (dev-only)
+Debug dashboard at `/telescope`. Registered only when `APP_ENV=local` (see `AppServiceProvider`). Config: `config/telescope.php`.
+
+### Horizon
+Redis queue dashboard at `/horizon`. Run with `php artisan horizon`. Config: `config/horizon.php`.
+
+### Pulse
+Performance monitoring at `/pulse`. Tracks slow queries, requests, exceptions. Config: `config/pulse.php`.
+
+### Octane (FrankenPHP)
+High-performance server. Run with `php artisan octane:start`. Config: `config/octane.php`.
+
+### Passport (OAuth2)
+Coexists with Sanctum. Use guard `api-oauth` for Passport-protected routes, `auth:sanctum` for API tokens. Config: `config/passport.php`.
+
+### Cashier (Stripe)
+Billing/subscriptions. `Billable` trait on User model. Set `STRIPE_KEY`/`STRIPE_SECRET` in `.env`.
+
+### Socialite
+Social login with Google, GitHub, Facebook configured in `config/services.php`. No routes pre-created.
+
+### Reverb
+WebSocket server. Run with `php artisan reverb:start`. Broadcasting configured for Reverb. Config: `config/reverb.php`.
+
+### MCP Server
+⚠️ Not yet installed — `php-mcp/laravel` does not support Laravel 13. Install when available.

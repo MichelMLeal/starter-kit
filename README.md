@@ -6,7 +6,7 @@ A production-ready Laravel starter kit with **DDD architecture**, **Sanctum auth
 
 | Layer | Technology |
 |-------|-----------|
-| **Backend** | Laravel 12, PHP 8.3+ |
+| **Backend** | Laravel 13, PHP 8.3+ |
 | **Frontend** | React 19, React Router, TailwindCSS v4, Vite |
 | **Auth** | Laravel Sanctum (API tokens + refresh tokens) |
 | **Database** | PostgreSQL 18 |
@@ -140,6 +140,164 @@ In Copilot Chat, type `/` and select a prompt from the list, or reference it inl
 ## CI/CD
 
 GitHub Actions on push/PR to `main`: **Lint** → **Test** → **Build**
+
+## Installed Packages
+
+All packages are installed and configured. Migrations will run on `php artisan migrate`.
+
+### Telescope — Debug Dashboard (dev-only)
+
+Debug assistant for requests, queries, jobs, exceptions, mail, and more.
+
+- **URL**: `/telescope` (local environment only)
+- **Config**: `config/telescope.php`
+- **Registered**: conditionally in `AppServiceProvider` (only when `APP_ENV=local`)
+
+```bash
+php artisan telescope:publish   # Publish latest assets after updating
+```
+
+### Horizon — Queue Dashboard
+
+Real-time dashboard and code-driven configuration for Redis queues.
+
+- **URL**: `/horizon`
+- **Config**: `config/horizon.php`
+- **Run**: `php artisan horizon`
+
+```bash
+php artisan horizon              # Start Horizon supervisor
+php artisan horizon:pause        # Pause processing
+php artisan horizon:continue     # Resume processing
+php artisan horizon:terminate    # Graceful shutdown
+```
+
+### Pulse — Performance Monitoring
+
+Real-time application performance monitoring (slow queries, requests, exceptions, queue jobs).
+
+- **URL**: `/pulse`
+- **Config**: `config/pulse.php`
+- **Migrations**: published in `database/migrations/`
+
+### Octane — High-Performance Server
+
+Serves the application using FrankenPHP for dramatically faster response times.
+
+- **Config**: `config/octane.php`
+- **Server**: FrankenPHP (binary at `frankenphp`)
+
+```bash
+php artisan octane:start                    # Start with FrankenPHP
+php artisan octane:start --workers=4        # Custom worker count
+php artisan octane:start --watch            # Auto-reload on file changes (dev)
+php artisan octane:reload                   # Graceful reload
+```
+
+### Passport — OAuth2 Server
+
+Full OAuth2 server implementation. Coexists with Sanctum — use Sanctum for API tokens, Passport for OAuth2 with third-party apps.
+
+- **Config**: `config/passport.php`
+- **Guard**: `api-oauth` (configured in `config/auth.php`)
+- **Migrations**: published in `database/migrations/`
+- **Encryption keys**: generated at `storage/oauth-private.key` and `storage/oauth-public.key`
+
+```bash
+php artisan passport:keys                   # Regenerate encryption keys
+php artisan passport:client                 # Create a new OAuth client
+php artisan passport:client --personal      # Create personal access client
+```
+
+> **Note**: Sanctum remains the default `auth:sanctum` guard for API routes. Use `auth:api-oauth` middleware for Passport-protected routes.
+
+### Cashier — Stripe Billing
+
+Subscription billing, one-time charges, invoices, and customer portal powered by Stripe.
+
+- **Config**: managed via `.env` (STRIPE_KEY, STRIPE_SECRET, etc.)
+- **Migrations**: published in `database/migrations/`
+- **User model**: `Billable` trait already added
+
+```env
+STRIPE_KEY=pk_test_...
+STRIPE_SECRET=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+```bash
+php artisan cashier:webhook    # Create Stripe webhook endpoint
+```
+
+### Socialite — Social Authentication
+
+OAuth login with Google, GitHub, and Facebook. Providers configured in `config/services.php`.
+
+- **Config**: `config/services.php` (github, google, facebook entries)
+- **No routes created** — implement your own controllers using:
+
+```php
+// Redirect to provider
+return Socialite::driver('github')->redirect();
+
+// Handle callback
+$user = Socialite::driver('github')->user();
+```
+
+```env
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+FACEBOOK_CLIENT_ID=
+FACEBOOK_CLIENT_SECRET=
+```
+
+### Reverb — WebSocket Server
+
+Laravel's first-party WebSocket server for real-time broadcasting.
+
+- **Config**: `config/reverb.php`, `config/broadcasting.php`
+- **Run**: `php artisan reverb:start`
+
+```bash
+php artisan reverb:start                    # Start WebSocket server
+php artisan reverb:start --debug            # Start with debug output
+```
+
+```env
+REVERB_APP_ID=your-app-id
+REVERB_APP_KEY=your-app-key
+REVERB_APP_SECRET=your-app-secret
+REVERB_HOST=localhost
+REVERB_PORT=8080
+```
+
+Frontend broadcasting is pre-configured with Vite env variables (`VITE_REVERB_*`).
+
+### MCP Server ⚠️ (Pending)
+
+Model Context Protocol server to expose the app to AI assistants. The `php-mcp/laravel` package does **not yet support Laravel 13**. Install when available:
+
+```bash
+composer require php-mcp/laravel   # When Laravel 13 support is released
+```
+
+---
+
+### Package Summary
+
+| Package | Version | Status | Dashboard |
+|---------|---------|--------|-----------|
+| Telescope | ^5 | ✅ Installed (dev) | `/telescope` |
+| Horizon | ^5 | ✅ Installed | `/horizon` |
+| Pulse | ^1 | ✅ Installed | `/pulse` |
+| Octane | ^2 | ✅ Installed (FrankenPHP) | — |
+| Passport | ^13 | ✅ Installed | — |
+| Cashier | ^16 | ✅ Installed (Stripe) | — |
+| Socialite | ^5 | ✅ Installed | — |
+| Reverb | ^1 | ✅ Installed | — |
+| MCP Server | — | ⏳ Pending (Laravel 13 compat) | — |
 
 ## License
 
