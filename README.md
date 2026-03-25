@@ -87,8 +87,10 @@ app/
 ## Testing
 
 ```bash
-./vendor/bin/pest               # Run all (19 tests)
-./vendor/bin/pest --filter=Auth # Auth tests only
+./vendor/bin/pest                                           # Run all (29 tests)
+./vendor/bin/pest --filter=Auth                             # Auth tests only
+./vendor/bin/pest tests/Feature/Auth/LoginTest.php          # Single file
+./vendor/bin/pest --filter="login with valid credentials"   # Single test by name
 ```
 
 ## Lint
@@ -96,6 +98,43 @@ app/
 ```bash
 ./vendor/bin/pint --test  # Check
 ./vendor/bin/pint         # Auto-fix
+```
+
+## Copilot Prompts
+
+This project includes reusable prompt skills in `.github/prompts/` for GitHub Copilot Chat. They automate common development workflows following the project's conventions.
+
+### How to use
+
+In Copilot Chat, type `/` and select a prompt from the list, or reference it inline with `#prompt:<name>`:
+
+```
+#prompt:branch   Create a user profile edit page, issue #42
+#prompt:tests    Generate tests for the new UserProfileAction
+#prompt:qa       Run full QA before merging
+```
+
+### Available prompts
+
+| Prompt | Description |
+|--------|-------------|
+| `branch` | Creates a new branch from `main` with naming convention `{type}/{slug}` (e.g., `feature/42-user-profile-edit`) |
+| `code-review` | Reviews current changes checking DDD architecture, type safety, security, and frontend patterns |
+| `migration-review` | Analyzes migrations for missing indexes, rollback safety, naming, and production lock risks |
+| `tests` | Generates Pest tests (Feature + Unit) following project patterns with happy path, validation, and auth scenarios |
+| `performance` | Identifies N+1 queries, missing indexes, unnecessary re-renders, bundle size, and memory issues |
+| `qa` | Runs lint + tests + build + manual checklist. Reports a pass/fail summary before review |
+| `push` | Auto-fixes lint, runs tests, creates Conventional Commits, pushes, and generates a PR description |
+
+### Typical workflow
+
+```
+#prompt:branch    → Create feature branch
+                  → Implement changes
+#prompt:tests     → Generate tests for new code
+#prompt:code-review → Review changes before commit
+#prompt:qa        → Full quality check
+#prompt:push      → Commit, push, and get PR description
 ```
 
 ## CI/CD
