@@ -111,5 +111,8 @@ Social login with Google, GitHub, Facebook configured in `config/services.php`. 
 ### Reverb
 WebSocket server. Run with `php artisan reverb:start`. Broadcasting configured for Reverb. Config: `config/reverb.php`.
 
+### Envoy (dev)
+Zero-downtime deployment via SSH. Recipe in `Envoy.blade.php` with deploy + rollback stories. Used by GitHub Actions deploy workflow.
+
 ### MCP Server
 ⚠️ Not yet installed — `php-mcp/laravel` does not support Laravel 13. Install when available.

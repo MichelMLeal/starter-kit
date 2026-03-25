@@ -139,7 +139,53 @@ In Copilot Chat, type `/` and select a prompt from the list, or reference it inl
 
 ## CI/CD
 
-GitHub Actions on push/PR to `main`: **Lint** → **Test** → **Build**
+GitHub Actions on push/PR to `main`: **Lint** → **Test** → **Build** → **Deploy**
+
+### Automatic Deploy
+
+After CI passes on `main`, the deploy workflow runs automatically using **Laravel Envoy**:
+
+1. Clones the repo on the server
+2. Links shared `.env`, `storage/`, `node_modules/`
+3. Installs PHP & Node dependencies
+4. Builds frontend assets
+5. Runs migrations
+6. Caches config/routes/views
+7. Swaps symlink (zero-downtime)
+8. Reloads Octane/Horizon/Reverb if running
+9. Cleans old releases (keeps last 5)
+
+### GitHub Secrets Required
+
+| Secret | Description | Example |
+|--------|-------------|---------|
+| `DEPLOY_SSH_KEY` | Private SSH key for the server | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
+| `DEPLOY_HOST` | Server hostname or IP | `192.168.1.100` |
+| `DEPLOY_USER` | SSH user | `deploy` |
+| `DEPLOY_PATH` | Application path on server | `/var/www/starter-kit` |
+
+### Manual Deploy
+
+```bash
+# Deploy
+envoy run deploy --DEPLOY_USER=deploy --DEPLOY_HOST=your-server.com --DEPLOY_PATH=/var/www/starter-kit
+
+# Rollback to previous release
+envoy run rollback --DEPLOY_USER=deploy --DEPLOY_HOST=your-server.com --DEPLOY_PATH=/var/www/starter-kit
+```
+
+### Server Setup (first time)
+
+```bash
+# On the server, create the directory structure:
+mkdir -p /var/www/starter-kit/{releases,shared/storage}
+
+# Copy your .env to the shared directory:
+cp .env /var/www/starter-kit/shared/.env
+
+# Ensure storage structure:
+mkdir -p /var/www/starter-kit/shared/storage/{app/public,framework/{cache,sessions,testing,views},logs}
+```
 
 ## Installed Packages
 
@@ -297,6 +343,7 @@ composer require php-mcp/laravel   # When Laravel 13 support is released
 | Cashier | ^16 | ✅ Installed (Stripe) | — |
 | Socialite | ^5 | ✅ Installed | — |
 | Reverb | ^1 | ✅ Installed | — |
+| Envoy | ^2 | ✅ Installed (dev) | — |
 | MCP Server | — | ⏳ Pending (Laravel 13 compat) | — |
 
 ## License
