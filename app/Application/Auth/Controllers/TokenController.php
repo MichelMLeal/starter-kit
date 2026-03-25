@@ -17,7 +17,7 @@ final class TokenController extends Controller
         private readonly RefreshTokenAction $refreshTokenAction,
     ) {}
 
-    public function refresh(RefreshTokenRequest $request): JsonResponse
+    public function __invoke(RefreshTokenRequest $request): JsonResponse
     {
         try {
             $result = $this->refreshTokenAction->execute(

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Application\Auth\Controllers;
 
-use App\Application\Auth\Resources\UserResource;
 use App\Application\Shared\Controllers\Controller;
 use App\Domain\Auth\Actions\LogoutAction;
 use App\Domain\Auth\Models\User;
@@ -17,7 +16,7 @@ final class LogoutController extends Controller
         private readonly LogoutAction $logoutAction,
     ) {}
 
-    public function logout(Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
         /** @var User $user */
         $user = $request->user();
@@ -26,13 +25,6 @@ final class LogoutController extends Controller
 
         return response()->json([
             'message' => 'Logged out successfully.',
-        ]);
-    }
-
-    public function me(Request $request): JsonResponse
-    {
-        return response()->json([
-            'data' => new UserResource($request->user()),
         ]);
     }
 }

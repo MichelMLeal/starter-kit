@@ -14,6 +14,8 @@ use Illuminate\Support\Str;
 
 final class LoginAction
 {
+    private const TOKEN_NAME = 'auth-token';
+
     public function __construct(
         private readonly UserRepositoryInterface $userRepository,
         private readonly RefreshTokenRepositoryInterface $refreshTokenRepository,
@@ -34,7 +36,7 @@ final class LoginAction
             throw new InvalidCredentialsException;
         }
 
-        $accessToken = $user->createToken('auth-token')->plainTextToken;
+        $accessToken = $user->createToken(self::TOKEN_NAME)->plainTextToken;
 
         $plainRefreshToken = Str::random(64);
 

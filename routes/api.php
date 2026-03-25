@@ -2,6 +2,7 @@
 
 use App\Application\Auth\Controllers\LoginController;
 use App\Application\Auth\Controllers\LogoutController;
+use App\Application\Auth\Controllers\MeController;
 use App\Application\Auth\Controllers\RegisterController;
 use App\Application\Auth\Controllers\TokenController;
 use Illuminate\Support\Facades\Route;
@@ -13,11 +14,11 @@ Route::prefix('auth')->group(function () {
     });
 
     Route::middleware('throttle:60,1')
-        ->post('/refresh', [TokenController::class, 'refresh'])
+        ->post('/refresh', TokenController::class)
         ->name('auth.refresh');
 
     Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/logout', [LogoutController::class, 'logout'])->name('auth.logout');
-        Route::get('/me', [LogoutController::class, 'me'])->name('auth.me');
+        Route::post('/logout', LogoutController::class)->name('auth.logout');
+        Route::get('/me', MeController::class)->name('auth.me');
     });
 });

@@ -61,3 +61,23 @@ it('fails with expired refresh token', function () {
 
     $response->assertStatus(401);
 });
+
+it('fails when user has been deleted', function () {
+    $user = UserFactory::new()->create();
+
+    $plainToken = 'orphaned-token-for-deleted-user';
+
+    RefreshToken::create([
+        'user_id' => $user->id,
+        'token' => hash('sha256', $plainToken),
+        'expires_at' => now()->addDays(7),
+    ]);
+
+    $user->delete();
+
+    $response = $this->postJson('/api/auth/refresh', [
+        'refresh_token' => $plainToken,
+    ]);
+
+    $response->assertStatus(401);
+});

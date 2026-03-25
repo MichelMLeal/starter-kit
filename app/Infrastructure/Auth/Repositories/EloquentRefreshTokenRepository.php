@@ -7,7 +7,6 @@ namespace App\Infrastructure\Auth\Repositories;
 use App\Domain\Auth\Models\RefreshToken;
 use App\Domain\Auth\Repositories\RefreshTokenRepositoryInterface;
 use DateTimeInterface;
-use Illuminate\Database\Eloquent\Model;
 
 final class EloquentRefreshTokenRepository implements RefreshTokenRepositoryInterface
 {
@@ -15,7 +14,7 @@ final class EloquentRefreshTokenRepository implements RefreshTokenRepositoryInte
         private readonly RefreshToken $model,
     ) {}
 
-    public function createForUser(int $userId, string $token, DateTimeInterface $expiresAt): Model
+    public function createForUser(int $userId, string $token, DateTimeInterface $expiresAt): RefreshToken
     {
         return $this->model->newQuery()->create([
             'user_id' => $userId,
@@ -24,9 +23,12 @@ final class EloquentRefreshTokenRepository implements RefreshTokenRepositoryInte
         ]);
     }
 
-    public function findByToken(string $token): ?Model
+    public function findByToken(string $token): ?RefreshToken
     {
-        return $this->model->newQuery()->where('token', hash('sha256', $token))->first();
+        return $this->model->newQuery()
+            ->with('user')
+            ->where('token', hash('sha256', $token))
+            ->first();
     }
 
     public function revokeAllForUser(int $userId): void

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Domain\Auth\Repositories;
 
+use App\Domain\Auth\Models\RefreshToken;
 use DateTimeInterface;
-use Illuminate\Database\Eloquent\Model;
 
 interface RefreshTokenRepositoryInterface
 {
-    public function createForUser(int $userId, string $token, DateTimeInterface $expiresAt): Model;
+    public function createForUser(int $userId, string $token, DateTimeInterface $expiresAt): RefreshToken;
 
-    public function findByToken(string $token): ?Model;
+    public function findByToken(string $token): ?RefreshToken;
 
     public function revokeAllForUser(int $userId): void;
 
