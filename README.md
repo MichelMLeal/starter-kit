@@ -35,6 +35,8 @@ npm install
 # Run migrations
 ./vendor/bin/sail artisan migrate
 
+./vendor/bin/sail artisan key:generate
+
 # Dev server (app + queue + logs + vite)
 composer dev
 ```
